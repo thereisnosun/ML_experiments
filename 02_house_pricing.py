@@ -158,7 +158,7 @@ def create_pipelines(housing_num):
     ])
 
     cat_pipeline = Pipeline([
-        ('selector', DataFrameSelector(cat_attribs)),
+        ('selector', DataFrameSelector(cat_attribs))
         ('cat_encoder', CategoricalEncoder(encoding="onehot-dense"))
     ])
     return num_pipeline, cat_pipeline
