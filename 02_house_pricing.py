@@ -21,6 +21,8 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVR
+
 
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
@@ -158,7 +160,7 @@ def create_pipelines(housing_num):
     ])
 
     cat_pipeline = Pipeline([
-        ('selector', DataFrameSelector(cat_attribs))
+        ('selector', DataFrameSelector(cat_attribs)),
         ('cat_encoder', CategoricalEncoder(encoding="onehot-dense"))
     ])
     return num_pipeline, cat_pipeline
@@ -168,7 +170,7 @@ def compute_mse(housing_prepared, regression_model):
     housing_prediction = regression_model.predict(housing_prepared)
     lin_mse = mean_squared_error(housing_labels, housing_prediction)
     lin_rmse = np.sqrt(lin_mse)
-    print (lin_rmse)
+    print ("MSE is -", lin_rmse)
 
 
 def hyper_param_search(housing_prepared, housing_labels):
@@ -182,68 +184,83 @@ def hyper_param_search(housing_prepared, housing_labels):
     print(grid_search.best_params_)
     return grid_search
 
-#fetch_housing_data();
-housing = load_housing_data()
 
-#stratification
-strat_test_set, strat_train_set = find_statification(housing)
+def SVMRegression(housing_prepared, housing_labels):
+    param_grid = [
+        {'kernel': ['linear'], 'C': [10., 30., 100., 300., 1000., 3000., 10000., 30000.0]},
+        {'kernel': ['rbf'], 'C': [1.0, 3.0, 10., 30., 100., 300., 1000.0],
+         'gamma': [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]},
+    ]
+    svm_reg = SVR()
+    grid_search = GridSearchCV(svm_reg, param_grid, cv=5, scoring="neg_mean_squared_error", verbose=2, n_jobs=4)
+    grid_search.fit(housing_prepared, housing_labels)
 
-housing = strat_train_set.drop("median_house_value", axis=1)
-housing_labels = strat_train_set["median_house_value"].copy()
+if __name__ == '__main__':
 
-median = housing["total_bedrooms"].median() # option 3
-housing["total_bedrooms"].fillna(median, inplace=True)
+    #fetch_housing_data();
+    housing = load_housing_data()
 
-attributes = ["median_house_value", "median_income", "total_rooms", "housing_median_age"]
+    #stratification
+    strat_test_set, strat_train_set = find_statification(housing)
 
-#filling missing values
-imputer = Imputer(strategy="median")
-housing_num = housing.drop("ocean_proximity", axis = 1)
-imputer.fit(housing_num)
-print (imputer.statistics_)
+    housing = strat_train_set.drop("median_house_value", axis=1)
+    housing_labels = strat_train_set["median_house_value"].copy()
 
-#feature regularization
-num_pipeline, cat_pipeline = create_pipelines(housing)
-#union pipelines into one entity
-full_pipeline = FeatureUnion(transformer_list=[
-    ('num_pipeline', num_pipeline),
-    ('cat_pipeline', cat_pipeline)
-])
-housing_prepared = full_pipeline.fit_transform(housing)
+    median = housing["total_bedrooms"].median() # option 3
+    housing["total_bedrooms"].fillna(median, inplace=True)
 
-#training the model
-lin_reg = LinearRegression();
-lin_reg.fit(housing_prepared, housing_labels)
-some_data = housing.iloc[:5]
-some_labels = housing.iloc[:5]
-some_dapa_prepared = full_pipeline.transform(some_data)
-print("Prediction - ", lin_reg.predict(some_dapa_prepared))
-print("Labels:", list(some_labels))
+    attributes = ["median_house_value", "median_income", "total_rooms", "housing_median_age"]
 
-#computing the error
-compute_mse(housing_prepared, lin_reg);
+    #filling missing values
+    imputer = Imputer(strategy="median")
+    housing_num = housing.drop("ocean_proximity", axis = 1)
+    imputer.fit(housing_num)
+    print (imputer.statistics_)
 
-tree_reg = DecisionTreeRegressor()
-tree_reg.fit(housing_prepared, housing_labels)
-compute_mse(housing_prepared, tree_reg)
+    #feature regularization
+    num_pipeline, cat_pipeline = create_pipelines(housing_num)
+    #union pipelines into one entity
+    full_pipeline = FeatureUnion(transformer_list=[
+        ('num_pipeline', num_pipeline),
+        ('cat_pipeline', cat_pipeline)
+    ])
+    housing_prepared = full_pipeline.fit_transform(housing)
 
-#cross-validation
-compute_scores(tree_reg, housing_prepared, housing_labels)
-compute_scores(lin_reg, housing_prepared, housing_labels)
+    #training the model
+    lin_reg = LinearRegression();
+    lin_reg.fit(housing_prepared, housing_labels)
+    some_data = housing.iloc[:5]
+    some_labels = housing_labels.iloc[:5]
+    some_dapa_prepared = full_pipeline.transform(some_data)
+    print("Prediction - ", lin_reg.predict(some_dapa_prepared))
+    print("Labels:", list(some_labels))
 
-forest_reg = RandomForestRegressor();
-forest_reg.fit(housing_prepared, housing_labels)
-compute_scores(forest_reg, housing_prepared, housing_labels)
+    #computing the error
+    compute_mse(housing_prepared, lin_reg);
 
-#hyperparameters search
-grid_search = hyper_param_search(housing_prepared, housing_labels)
+    tree_reg = DecisionTreeRegressor()
+    tree_reg.fit(housing_prepared, housing_labels)
+    compute_mse(housing_prepared, tree_reg)
 
-#evaluating the final model
-final_model = grid_search.best_estimator_
-X_test = strat_test_set.drop("median_house_value", axis=1)
-Y_test = strat_test_set['median_house_value'].copy()
-X_test_prepared = full_pipeline.transform(X_test)
-final_predictions = final_model.predict(X_test_prepared)
-final_mse = mean_squared_error(Y_test, final_predictions)
-final_rmse = np.sqrt(final_mse)
-print('Final mse {0}. Final rmse {1}'.format(final_mse, final_rmse))
+    #cross-validation
+    compute_scores(tree_reg, housing_prepared, housing_labels)
+    compute_scores(lin_reg, housing_prepared, housing_labels)
+
+    forest_reg = RandomForestRegressor();
+    forest_reg.fit(housing_prepared, housing_labels)
+    compute_scores(forest_reg, housing_prepared, housing_labels)
+
+    #hyperparameters search
+    grid_search = hyper_param_search(housing_prepared, housing_labels)
+
+    #evaluating the final model
+    final_model = grid_search.best_estimator_
+    X_test = strat_test_set.drop("median_house_value", axis=1)
+    Y_test = strat_test_set['median_house_value'].copy()
+    X_test_prepared = full_pipeline.transform(X_test)
+    final_predictions = final_model.predict(X_test_prepared)
+    final_mse = mean_squared_error(Y_test, final_predictions)
+    final_rmse = np.sqrt(final_mse)
+    print('Final mse {0}. Final rmse {1}'.format(final_mse, final_rmse))
+
+    SVMRegression(housing_prepared, housing_labels)
