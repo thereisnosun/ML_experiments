@@ -263,4 +263,4 @@ if __name__ == '__main__':
     final_rmse = np.sqrt(final_mse)
     print('Final mse {0}. Final rmse {1}'.format(final_mse, final_rmse))
 
-    SVMRegression(housing_prepared, housing_labels)
+    SVMRegression(housing_prepared, housing_labels) # TODO: save it to a pickle
