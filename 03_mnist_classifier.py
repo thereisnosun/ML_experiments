@@ -19,6 +19,13 @@ def plotNumber(X):
     plt.axis("off")
     plt.show()
 
+def plot_digit(data):
+    image = data.reshape(28, 28)
+    plt.imshow(image, cmap = matplotlib.cm.binary,
+               interpolation="nearest")
+    plt.axis("off")
+    plt.show()
+
 def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.plot(thresholds, precisions[:-1], "b--", label="Precision")
     plt.plot(thresholds, recalls[:-1], "g-", label="Recall")
@@ -126,4 +133,5 @@ if __name__ == "__main__":
     y_test_mod = X_test
     knn_clf.fit(X_train_mod, y_train_mod)
     clean_digit = knn_clf.predict([some_digit])
-    plotNumber(clean_digit)
+    print( type(clean_digit))
+    plot_digit(clean_digit)
