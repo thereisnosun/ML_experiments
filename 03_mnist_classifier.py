@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_curve
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 
 def plotNumber(X):
     digit = X[36000];
@@ -101,3 +102,28 @@ if __name__ == "__main__":
     print (conf_matrix)
     plt.matshow(conf_matrix, cmap=plt.cm.gray)
     plt.show()
+
+    row_sums = conf_matrix.sum(axis=1, keepdims=True)
+    norm_conf_mx = conf_matrix / row_sums
+    np.fill_diagonal(norm_conf_mx, 0)
+    plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
+    plt.show()
+
+#neighbours classifier
+    y_train_large = (y_train >= 7)
+    y_train_odd = (y_train % 2 == 1)
+    y_multilabel = np.c_[y_train_large, y_train_odd]
+    knn_clf = KNeighborsClassifier()
+    knn_clf.fit(X_train, y_multilabel)
+    print (knn_clf.predict([some_digit]))
+
+#noise reduction
+    noise = np.random.randint(0, 100, (len(X_train), 784))
+    X_train_mod = X_train + noise
+    noise = np.random.randint(0, 100, (len(X_test), 784))
+    X_test_mod = X_test + noise
+    y_train_mod = X_train
+    y_test_mod = X_test
+    knn_clf.fit(X_train_mod, y_train_mod)
+    clean_digit = knn_clf.predict([some_digit])
+    plotNumber(clean_digit)
