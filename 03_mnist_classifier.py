@@ -49,6 +49,9 @@ if __name__ == "__main__":
     X_train, X_test = X[:60000], X[60000:]
     y_train, y_test = y[:60000], y[60000:]
 
+    print(type(X), type(X_train))
+    exit(0)
+
     shuffle_index = np.random.permutation(60000);
     X_train, y_train = X_train[shuffle_index], y_train[shuffle_index]
 
@@ -58,6 +61,9 @@ if __name__ == "__main__":
     some_digit = X[36000]
     some_digit_image = some_digit.reshape(28, 28)
 
+    print(X_train.shape, type(X_train))
+    print(y_train_5.shape)
+
     sgd_classifier = SGDClassifier(random_state=42)
     sgd_classifier.fit(X_train, y_train_5)
     print (sgd_classifier.predict( [ X[36000]] ))
@@ -65,8 +71,10 @@ if __name__ == "__main__":
     val_score = cross_val_score(sgd_classifier, X_train, y_train_5,cv=3, scoring="accuracy")
     print (val_score)
 
+
     y_train_pred = cross_val_predict(sgd_classifier, X_train, y_train_5, cv=3)
     print( y_train_pred )
+
     conf_matrix = confusion_matrix(y_train_5, y_train_pred)
     print( conf_matrix )
     print (precision_score(y_train_5, y_train_pred))
@@ -93,7 +101,7 @@ if __name__ == "__main__":
 
     ovo_clf = OneVsOneClassifier(SGDClassifier(random_state=42))
     ovo_clf.fit(X_train, y_train)
-    ovo_clf.predict([some_digit])
+    ovo_clf.predict([some_digit]    )
 
     sgd_clf = SGDClassifier(random_state=42)
     sgd_clf.fit(X_train, y_train_5)

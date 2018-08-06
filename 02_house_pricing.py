@@ -197,7 +197,7 @@ def SVMRegression(housing_prepared, housing_labels):
 
 if __name__ == '__main__':
 
-    #fetch_housing_data();
+    fetch_housing_data();
     housing = load_housing_data()
 
     #stratification
@@ -225,6 +225,7 @@ if __name__ == '__main__':
         ('cat_pipeline', cat_pipeline)
     ])
     housing_prepared = full_pipeline.fit_transform(housing)
+    print("Housing- ", - housing_prepared)
 
     #training the model
     lin_reg = LinearRegression();
