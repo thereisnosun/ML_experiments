@@ -12,12 +12,14 @@ from sklearn.multiclass import OneVsOneClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 
+
 def plotNumber(X):
     digit = X[36000];
     digit_image = digit.reshape(28, 28);
     plt.imshow(digit_image, cmap=matplotlib.cm.binary, interpolation="nearest")
     plt.axis("off")
     plt.show()
+
 
 def plot_digit(data):
     image = data.reshape(28, 28)
@@ -33,12 +35,14 @@ def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.legend(loc="center left")
     plt.ylim([0, 1])
 
+
 def plot_roc_curve(fpr, tpr, label=None):
     plt.plot(fpr, tpr, linewidth=2, label=label)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.axis([0, 1, 0, 1])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
+
 
 if __name__ == "__main__":
     mnist = fetch_mldata("MNIST original")
